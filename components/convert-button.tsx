@@ -11,12 +11,12 @@ export default function ConvertButton({ onClick, isLoading, disabled }: ConvertB
     <button
       onClick={onClick}
       disabled={disabled}
-      className="px-6 py-3 bg-accent text-accent-foreground rounded-lg font-bold text-center lg:w-32 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap"
+      className="w-full px-6 py-3.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm tracking-wide hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
     >
       {isLoading ? (
         <>
-          <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
             <path
               className="opacity-75"
               fill="currentColor"
@@ -27,8 +27,10 @@ export default function ConvertButton({ onClick, isLoading, disabled }: ConvertB
         </>
       ) : (
         <>
-          <span>⚡</span>
-          <span>変換する</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>会話に変換</span>
         </>
       )}
     </button>

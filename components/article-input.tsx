@@ -12,8 +12,8 @@ export default function ArticleInput({ value, onChange, disabled }: ArticleInput
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
-      placeholder="ニュース記事またはテキストをここに入力してください..."
-      className="flex-1 w-full p-4 bg-card border border-border rounded-lg text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+      placeholder="ニュース記事を貼り付けてください..."
+      className="flex-1 w-full p-5 bg-card border border-border rounded-lg text-foreground text-sm leading-relaxed placeholder:text-muted-foreground/60 resize-none focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
     />
   )
 }
