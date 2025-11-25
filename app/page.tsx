@@ -7,7 +7,6 @@ import ArticleInput from "@/components/article-input"
 import ConvertButton from "@/components/convert-button"
 
 export default function Home() {
-  const [tone, setTone] = useState<"frank" | "serious" | "educational">("frank")
   const [chatHistory, setChatHistory] = useState<
     Array<{ role: "user" | "assistant" | "character_a" | "character_b"; content: string }>
   >([])
@@ -27,7 +26,6 @@ export default function Home() {
         },
         body: JSON.stringify({
           article: articleText,
-          tone: tone,
         }),
       })
 
@@ -37,16 +35,10 @@ export default function Home() {
 
       const data = await response.json()
 
-      // 記事をチャットに追加
-      const newHistory = [
-        ...chatHistory,
-        { role: "user" as const, content: `記事 (トーン: ${tone}):` },
-        { role: "user" as const, content: articleText.slice(0, 100) + "..." },
-      ]
+      const newHistory: Array<{ role: "user" | "assistant" | "character_a" | "character_b"; content: string }> = []
 
-      // 会話形式の応答を追加
       if (data.conversation && Array.isArray(data.conversation)) {
-        data.conversation.forEach((msg: any) => {
+        data.conversation.forEach((msg: { role: string; content: string }) => {
           newHistory.push({
             role: msg.role as "character_a" | "character_b",
             content: msg.content,
@@ -55,10 +47,9 @@ export default function Home() {
       }
 
       setChatHistory(newHistory)
-      setArticleText("")
     } catch (error) {
       console.error("エラー:", error)
-      setChatHistory([...chatHistory, { role: "assistant", content: "エラーが発生しました。もう一度試してください。" }])
+      setChatHistory([{ role: "assistant", content: "エラーが発生しました。もう一度お試しください。" }])
     } finally {
       setIsLoading(false)
     }
@@ -71,33 +62,46 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar tone={tone} setTone={setTone} onReset={handleReset} />
+      <Sidebar onReset={handleReset} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* ヘッダー */}
-        <div className="border-b border-border bg-card">
-          <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-foreground">News to Chat</h1>
-            <p className="text-sm text-muted-foreground">ニュース記事を会話形式に変換</p>
+        {/* Header - cleaner, more minimal */}
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
+          <div className="px-8 py-5">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-accent" />
+              <h1 className="text-xl font-semibold tracking-tight text-foreground">News to Chat</h1>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1 ml-5">Transform articles into conversations</p>
           </div>
-        </div>
+        </header>
 
-        {/* コンテンツエリア */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row gap-4 p-6">
-          {/* 入力エリア */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <h2 className="text-lg font-semibold mb-3 text-foreground">記事を入力</h2>
+        {/* Content Area - refined spacing */}
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
+          {/* Input Area */}
+          <div className="flex-1 flex flex-col p-8 border-r border-border">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Input</h2>
+              <span className="text-xs text-muted-foreground">{articleText.length.toLocaleString()} chars</span>
+            </div>
             <ArticleInput value={articleText} onChange={setArticleText} disabled={isLoading} />
+            <div className="mt-6">
+              <ConvertButton
+                onClick={handleConvert}
+                isLoading={isLoading}
+                disabled={!articleText.trim() || isLoading}
+              />
+            </div>
           </div>
 
-          {/* ボタン */}
-          <div className="flex lg:flex-col justify-center lg:justify-start">
-            <ConvertButton onClick={handleConvert} isLoading={isLoading} disabled={!articleText.trim() || isLoading} />
-          </div>
-
-          {/* 出力エリア */}
-          <div className="flex-1 flex flex-col min-w-0">
-            <h2 className="text-lg font-semibold mb-3 text-foreground">会話形式</h2>
+          {/* Output Area */}
+          <div className="flex-1 flex flex-col p-8 bg-secondary/30">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Output</h2>
+              {chatHistory.length > 0 && (
+                <span className="text-xs text-muted-foreground">{chatHistory.length} messages</span>
+              )}
+            </div>
             <ChatArea chatHistory={chatHistory} isLoading={isLoading} />
           </div>
         </div>

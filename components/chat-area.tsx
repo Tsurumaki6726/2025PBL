@@ -11,58 +11,83 @@ interface ChatAreaProps {
 }
 
 export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
-  const characterNames: Record<string, string> = {
-    character_a: "キャラクターA",
-    character_b: "キャラクターB",
+  const getCharacterInfo = (role: string) => {
+    switch (role) {
+      case "character_a":
+        return { name: "A", color: "bg-accent text-accent-foreground" }
+      case "character_b":
+        return { name: "B", color: "bg-primary text-primary-foreground" }
+      default:
+        return { name: "?", color: "bg-muted text-muted-foreground" }
+    }
   }
 
   return (
-    <div className="flex-1 bg-card border border-border rounded-lg p-4 overflow-y-auto flex flex-col">
+    <div className="flex-1 bg-card border border-border rounded-lg overflow-hidden flex flex-col">
       {chatHistory.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-muted-foreground">
-            <p className="mb-2">📰</p>
-            <p>記事を入力して「変換する」をクリック</p>
-            <p className="text-xs mt-2">AI がチャット形式に変換します</p>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-xs">
+            <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+              <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+            </div>
+            <p className="text-sm text-foreground font-medium mb-1">会話がここに表示されます</p>
+            <p className="text-xs text-muted-foreground">左側に記事を入力して変換ボタンをクリック</p>
           </div>
         </div>
       ) : (
-        <>
-          {chatHistory.map((msg, idx) => (
-            <div key={idx} className="mb-4 flex gap-3">
-              {msg.role === "user" ? (
-                <>
-                  <div className="flex-shrink-0 w-8 h-8 bg-accent rounded-full flex items-center justify-center text-xs font-bold text-accent-foreground">
-                    👤
-                  </div>
-                  <div className="flex-1 bg-secondary rounded-lg p-3">
-                    <p className="text-sm font-semibold text-foreground mb-1">あなた</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">{msg.content}</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground">
-                    🤖
-                  </div>
-                  <div className="flex-1 bg-primary/5 rounded-lg p-3">
-                    <p className="text-sm font-semibold text-foreground mb-1">{characterNames[msg.role] || msg.role}</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">{msg.content}</p>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {chatHistory.map((msg, idx) => {
+            const charInfo = getCharacterInfo(msg.role)
+            const isCharacterA = msg.role === "character_a"
+
+            return (
+              <div key={idx} className={`flex gap-3 ${isCharacterA ? "" : "flex-row-reverse"}`}>
+                <div
+                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${charInfo.color}`}
+                >
+                  {charInfo.name}
+                </div>
+                <div
+                  className={`max-w-[80%] rounded-xl px-4 py-2.5 ${
+                    isCharacterA
+                      ? "bg-secondary text-secondary-foreground rounded-tl-sm"
+                      : "bg-accent/10 text-foreground rounded-tr-sm"
+                  }`}
+                >
+                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                </div>
+              </div>
+            )
+          })}
+
           {isLoading && (
-            <div className="flex gap-3 items-center justify-center py-4">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            <div className="flex gap-3">
+              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                <div className="flex gap-0.5">
+                  <div
+                    className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <div
+                    className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  />
+                  <div
+                    className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  />
+                </div>
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   )
