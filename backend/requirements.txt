@@ -1,4 +1,16 @@
+# FastAPI
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 pydantic==2.5.3
 python-multipart==0.0.6
+
+# Note: unsloth requires special installation
+# pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+pandas>=2.0.0
+torch>=2.0.0
+accelerate>=0.25.0
+bitsandbytes>=0.41.0
+transformers>=4.36.0
+peft>=0.7.0
+trl>=0.7.0
+xformers>=0.0.23
