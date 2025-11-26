@@ -18,7 +18,7 @@ news-to-chat-app/
 ├── backend/
 │   ├── main.py              # FastAPI サーバー（Swallow統合済み）
 │   ├── requirements.txt     # Python依存パッケージ
-│   └── data/
+│   └── articles/            # data → articles に変更
 │       └── ehime_kiji_001.csv  # ニュース記事CSV
 ├── .env.local               # 環境変数
 └── SETUP_GUIDE.md           # このファイル
@@ -62,8 +62,8 @@ pip install fastapi uvicorn pydantic python-multipart
 #### 1.5 CSVファイルの配置
 
 \`\`\`bash
-mkdir -p data
-cp /path/to/ehime_kiji_001.csv data/
+mkdir -p articles
+cp /path/to/ehime_kiji_001.csv articles/
 \`\`\`
 
 CSVファイルの要件：
@@ -79,7 +79,7 @@ python main.py
 起動時に以下が表示されます：
 \`\`\`
 🚀 News to Chat API を起動しています...
-📂 ファイル確認中: .../data/ehime_kiji_001.csv
+📂 ファイル確認中: .../articles/ehime_kiji_001.csv
 ✅ CSV読み込み成功: XX 件の記事をロードしました。
 ⏳ [tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.3] をロードしています...
 ※Swallowは高精度なため、初回ダウンロードとロードに3〜5分程度かかります。
@@ -156,7 +156,7 @@ curl -X POST http://localhost:8000/convert \
 - `torch.cuda.is_available()` でGPU確認
 
 ### CSVが読み込めない
-- ファイルパス確認: `backend/data/ehime_kiji_001.csv`
+- ファイルパス確認: `backend/articles/ehime_kiji_001.csv`
 - 列名が `honbun` であることを確認
 - エンコーディングがUTF-8であることを確認
 
