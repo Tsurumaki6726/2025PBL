@@ -113,8 +113,7 @@ export async function POST(request: NextRequest) {
 
     const fastApiUrl = process.env.FASTAPI_URL
 
-    // Only try to connect to FastAPI if URL is explicitly configured and not localhost
-    if (fastApiUrl && !fastApiUrl.includes("localhost")) {
+    if (fastApiUrl) {
       try {
         const response = await fetch(`${fastApiUrl}/convert`, {
           method: "POST",
@@ -130,6 +129,7 @@ export async function POST(request: NextRequest) {
           const data = await response.json()
           return NextResponse.json(data)
         }
+        console.error("FastAPI response not ok:", response.status)
       } catch (error) {
         console.error("FastAPI connection error:", error)
       }
