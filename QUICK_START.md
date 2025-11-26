@@ -60,6 +60,8 @@ project_root/
 ├── backend/                      (FastAPI バックエンド)
 │   ├── main.py
 │   ├── requirements.txt
+│   ├── articles/                 # data → articles に変更
+│   │   └── ehime_kiji_001.csv
 │   └── venv/
 ├── package.json
 └── .env.local                    (環境変数)

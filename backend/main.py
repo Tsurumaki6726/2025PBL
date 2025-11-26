@@ -25,8 +25,7 @@ from unsloth import FastLanguageModel
 # Swallow v0.3 (Llama 3.1ベースの最新日本語モデル)
 MODEL_ID = "tokyotech-llm/Llama-3.1-Swallow-8B-Instruct-v0.3"
 
-# CSVファイルパス（backend/data/ に配置）
-CSV_FILE_NAME = os.path.join(os.path.dirname(__file__), "data", "ehime_kiji_001.csv")
+CSV_FILE_NAME = os.path.join(os.path.dirname(__file__), "articles", "ehime_kiji_001.csv")
 COLUMN_NAME = "honbun"
 
 # ============================================================
