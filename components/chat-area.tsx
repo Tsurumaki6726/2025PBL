@@ -14,9 +14,9 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
   const getCharacterInfo = (role: string) => {
     switch (role) {
       case "character_a":
-        return { name: "A", color: "bg-accent text-accent-foreground" }
+        return { name: "博士", color: "bg-amber-600 text-white" }
       case "character_b":
-        return { name: "B", color: "bg-primary text-primary-foreground" }
+        return { name: "生徒", color: "bg-accent text-accent-foreground" }
       default:
         return { name: "?", color: "bg-muted text-muted-foreground" }
     }
@@ -38,7 +38,7 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
               </svg>
             </div>
             <p className="text-sm text-foreground font-medium mb-1">会話がここに表示されます</p>
-            <p className="text-xs text-muted-foreground">左側に記事を入力して変換ボタンをクリック</p>
+            <p className="text-xs text-muted-foreground">記事を選択して変換ボタンをクリック</p>
           </div>
         </div>
       ) : (
@@ -50,18 +50,23 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
             return (
               <div key={idx} className={`flex gap-3 ${isCharacterA ? "" : "flex-row-reverse"}`}>
                 <div
-                  className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${charInfo.color}`}
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${charInfo.color}`}
                 >
-                  {charInfo.name}
+                  {charInfo.name.charAt(0)}
                 </div>
-                <div
-                  className={`max-w-[80%] rounded-xl px-4 py-2.5 ${
-                    isCharacterA
-                      ? "bg-secondary text-secondary-foreground rounded-tl-sm"
-                      : "bg-accent/10 text-foreground rounded-tr-sm"
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed">{msg.content}</p>
+                <div className="flex flex-col gap-1 max-w-[80%]">
+                  <span className={`text-xs text-muted-foreground ${isCharacterA ? "" : "text-right"}`}>
+                    {charInfo.name}
+                  </span>
+                  <div
+                    className={`rounded-xl px-4 py-2.5 ${
+                      isCharacterA
+                        ? "bg-secondary text-secondary-foreground rounded-tl-sm"
+                        : "bg-accent/10 text-foreground rounded-tr-sm"
+                    }`}
+                  >
+                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                  </div>
                 </div>
               </div>
             )
@@ -69,7 +74,7 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
 
           {isLoading && (
             <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <div className="flex gap-0.5">
                   <div
                     className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
@@ -83,6 +88,12 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
                     className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
                     style={{ animationDelay: "300ms" }}
                   />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">処理中...</span>
+                <div className="bg-secondary rounded-xl px-4 py-2.5 rounded-tl-sm">
+                  <p className="text-sm text-muted-foreground">会話を生成しています（10〜30秒程度かかります）</p>
                 </div>
               </div>
             </div>
