@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 
-// In production with FastAPI backend, this will be replaced
 const MOCK_ARTICLES = [
   {
     id: 1,
@@ -25,17 +24,20 @@ const MOCK_ARTICLES = [
 export async function GET() {
   const FASTAPI_URL = process.env.FASTAPI_URL
 
-  // Only try to fetch from FastAPI if URL is explicitly configured
-  if (FASTAPI_URL && !FASTAPI_URL.includes("localhost")) {
+  if (FASTAPI_URL) {
     try {
       const response = await fetch(`${FASTAPI_URL}/articles`, {
         cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+        },
       })
 
       if (response.ok) {
         const data = await response.json()
         return NextResponse.json(data)
       }
+      console.error("FastAPI response not ok:", response.status)
     } catch (error) {
       console.error("FastAPI connection error:", error)
     }
