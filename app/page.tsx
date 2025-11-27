@@ -45,8 +45,17 @@ export default function Home() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true", // ngrokの警告画面をバイパスするヘッダーを追加
         },
       })
+
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.includes("text/html")) {
+        setConnectionError(
+          "ngrokの警告画面が表示されています。ブラウザで一度ngrok URLにアクセスして警告を承認してください。",
+        )
+        return
+      }
 
       if (response.ok) {
         const data = await response.json()
@@ -57,7 +66,7 @@ export default function Home() {
           setSelectedArticleId(data.articles[0].id)
         }
       } else {
-        setConnectionError("接続に失敗しました。URLを確認してください。")
+        setConnectionError(`接続に失敗しました（${response.status}）。URLを確認してください。`)
       }
     } catch (error) {
       console.error("接続エラー:", error)
@@ -81,14 +90,20 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true", // ngrokの警告画面をバイパスするヘッダーを追加
         },
         body: JSON.stringify({
           article_id: selectedArticleId,
         }),
       })
 
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error("ngrokの警告画面が返されました。ブラウザで一度ngrok URLにアクセスして警告を承認してください。")
+      }
+
       if (!response.ok) {
-        throw new Error("変換に失敗しました")
+        throw new Error(`変換に失敗しました（${response.status}）`)
       }
 
       const data = await response.json()
@@ -114,7 +129,13 @@ export default function Home() {
       setChatHistory(newHistory)
     } catch (error) {
       console.error("エラー:", error)
-      setChatHistory([{ role: "assistant", content: "エラーが発生しました。Colabが起動しているか確認してください。" }])
+      setChatHistory([
+        {
+          role: "assistant",
+          content:
+            error instanceof Error ? error.message : "エラーが発生しました。Colabが起動しているか確認してください。",
+        },
+      ])
     } finally {
       setIsLoading(false)
     }
