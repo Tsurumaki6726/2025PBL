@@ -259,7 +259,9 @@ export default function Home() {
                     <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                       Selected Article Preview
                     </h3>
-                    <p className="text-sm text-foreground leading-relaxed line-clamp-4">{selectedArticle.content}</p>
+                    <p className="text-sm text-foreground leading-relaxed max-h-40 overflow-y-auto">
+                      {selectedArticle.content}
+                    </p>
                   </div>
                 )}
               </>
@@ -276,11 +278,11 @@ export default function Home() {
             {summary && (
               <div className="mb-4 p-4 bg-card border border-border rounded-lg flex-shrink-0">
                 <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">Summary</h3>
-                <p className="text-sm text-foreground leading-relaxed max-h-24 overflow-y-auto">{summary}</p>
+                <p className="text-sm text-foreground leading-relaxed max-h-32 overflow-y-auto">{summary}</p>
               </div>
             )}
 
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <ChatArea chatHistory={chatHistory} isLoading={isLoading} />
             </div>
           </div>
