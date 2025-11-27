@@ -177,7 +177,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
           {/* Input Area */}
-          <div className="flex-1 flex flex-col p-8 border-r border-border">
+          <div className="lg:w-1/2 flex flex-col p-6 border-r border-border overflow-y-auto">
             {!isConnected ? (
               <div className="space-y-4">
                 <div>
@@ -231,7 +231,7 @@ export default function Home() {
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                     Select Article
                   </h2>
@@ -246,7 +246,7 @@ export default function Home() {
                   isLoading={isLoadingArticles}
                 />
 
-                <div className="mt-6">
+                <div className="mt-4">
                   <ConvertButton
                     onClick={handleConvert}
                     isLoading={isLoading}
@@ -255,11 +255,11 @@ export default function Home() {
                 </div>
 
                 {selectedArticle && (
-                  <div className="mt-6 p-4 bg-secondary/50 rounded-lg border border-border">
+                  <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
                     <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                       Selected Article Preview
                     </h3>
-                    <p className="text-sm text-foreground leading-relaxed line-clamp-6">{selectedArticle.content}</p>
+                    <p className="text-sm text-foreground leading-relaxed line-clamp-4">{selectedArticle.content}</p>
                   </div>
                 )}
               </>
@@ -267,20 +267,22 @@ export default function Home() {
           </div>
 
           {/* Output Area */}
-          <div className="flex-1 flex flex-col p-8 bg-secondary/30">
+          <div className="lg:w-1/2 flex flex-col p-6 bg-secondary/30 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Output</h2>
               {processingTime && <span className="text-xs text-accent font-medium">{processingTime}</span>}
             </div>
 
             {summary && (
-              <div className="mb-4 p-4 bg-card border border-border rounded-lg">
+              <div className="mb-4 p-4 bg-card border border-border rounded-lg flex-shrink-0">
                 <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">Summary</h3>
-                <p className="text-sm text-foreground leading-relaxed">{summary}</p>
+                <p className="text-sm text-foreground leading-relaxed max-h-24 overflow-y-auto">{summary}</p>
               </div>
             )}
 
-            <ChatArea chatHistory={chatHistory} isLoading={isLoading} />
+            <div className="flex-1 min-h-0">
+              <ChatArea chatHistory={chatHistory} isLoading={isLoading} />
+            </div>
           </div>
         </div>
       </main>

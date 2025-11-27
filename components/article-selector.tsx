@@ -19,7 +19,7 @@ interface ArticleSelectorProps {
 export default function ArticleSelector({ articles, selectedId, onSelect, disabled, isLoading }: ArticleSelectorProps) {
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-card border border-border rounded-lg">
+      <div className="h-48 flex items-center justify-center bg-card border border-border rounded-lg">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">記事を読み込み中...</p>
@@ -30,7 +30,7 @@ export default function ArticleSelector({ articles, selectedId, onSelect, disabl
 
   if (articles.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-card border border-border rounded-lg">
+      <div className="h-48 flex items-center justify-center bg-card border border-border rounded-lg">
         <div className="text-center p-8">
           <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
             <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +50,7 @@ export default function ArticleSelector({ articles, selectedId, onSelect, disabl
   }
 
   return (
-    <div className="flex-1 flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* Dropdown selector */}
       <div className="relative">
         <select
@@ -61,15 +61,14 @@ export default function ArticleSelector({ articles, selectedId, onSelect, disabl
         >
           {articles.map((article) => (
             <option key={article.id} value={article.id}>
-              {article.id}. {article.preview}
+              {article.id}. {article.preview.length > 40 ? article.preview.slice(0, 40) + "..." : article.preview}
             </option>
           ))}
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       </div>
 
-      {/* Article list */}
-      <div className="flex-1 overflow-y-auto bg-card border border-border rounded-lg">
+      <div className="max-h-48 overflow-y-auto bg-card border border-border rounded-lg">
         <div className="divide-y divide-border">
           {articles.map((article) => (
             <button
@@ -84,7 +83,7 @@ export default function ArticleSelector({ articles, selectedId, onSelect, disabl
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-xs font-medium flex items-center justify-center text-muted-foreground">
                   {article.id}
                 </span>
-                <span className="text-sm text-foreground truncate">{article.preview}</span>
+                <span className="text-sm text-foreground line-clamp-1">{article.preview}</span>
               </div>
             </button>
           ))}
