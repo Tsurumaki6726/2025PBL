@@ -23,7 +23,7 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
   }
 
   return (
-    <div className="flex-1 bg-card border border-border rounded-lg overflow-hidden flex flex-col">
+    <div className="h-full bg-card border border-border rounded-lg overflow-hidden flex flex-col">
       {chatHistory.length === 0 ? (
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-xs">
@@ -42,7 +42,7 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
           {chatHistory.map((msg, idx) => {
             const charInfo = getCharacterInfo(msg.role)
             const isCharacterA = msg.role === "character_a"
