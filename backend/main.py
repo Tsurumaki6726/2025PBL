@@ -73,8 +73,8 @@ class ConvertResponse(BaseModel):
 
 class ArticleItem(BaseModel):
     id: int
-    preview: str
-    content: str
+    preview: str  # This will now hold midasi (headline)
+    content: str  # honbun (article body)
 
 class ArticlesResponse(BaseModel):
     articles: list[ArticleItem]
@@ -92,11 +92,26 @@ def load_articles():
     if os.path.exists(CSV_FILE_NAME):
         try:
             df = pd.read_csv(CSV_FILE_NAME, encoding="utf-8")
-            if COLUMN_NAME in df.columns:
-                ARTICLES = df[COLUMN_NAME].tolist()
+            if "honbun" in df.columns and "midasi" in df.columns:
+                ARTICLES = []
+                for idx in range(len(df)):
+                    ARTICLES.append({
+                        "honbun": str(df["honbun"][idx]),
+                        "midasi": str(df["midasi"][idx])
+                    })
                 print(f"✅ CSV読み込み成功: {len(ARTICLES)} 件の記事をロードしました。")
+            elif "honbun" in df.columns:
+                # Fallback: honbun only (midasi not available)
+                ARTICLES = []
+                for idx in range(len(df)):
+                    content = str(df["honbun"][idx])
+                    ARTICLES.append({
+                        "honbun": content,
+                        "midasi": content[:30] + "..."  # Use first 30 chars as preview
+                    })
+                print(f"✅ CSV読み込み成功 (honbunのみ): {len(ARTICLES)} 件の記事をロードしました。")
             else:
-                print(f"❌ 列名 '{COLUMN_NAME}' が見つかりません。")
+                print(f"❌ 列名 'honbun' が見つかりません。")
                 ARTICLES = []
         except Exception as e:
             print(f"❌ CSVエラー: {e}")
@@ -163,7 +178,7 @@ def process_article(article_id: int) -> dict:
     if article_id < 0 or article_id >= len(ARTICLES):
         raise Exception(f"無効な記事ID: {article_id}")
     
-    original_text = str(ARTICLES[article_id])
+    original_text = ARTICLES[article_id]["honbun"]
     start_time = time.time()
     
     # --- ステップA: 要約 ---
@@ -288,11 +303,11 @@ async def get_articles():
     """CSVから読み込んだ記事一覧を返す"""
     articles = []
     for i, article in enumerate(ARTICLES):
-        preview = str(article)[:30].replace("\n", " ") + "..."
+        preview = article["midasi"]  # Use midasi as preview
         articles.append(ArticleItem(
             id=i,
             preview=preview,
-            content=str(article)
+            content=article["honbun"]
         ))
     return ArticlesResponse(articles=articles)
 
