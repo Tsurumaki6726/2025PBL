@@ -170,7 +170,27 @@ vercel
 
 ## ライセンス
 
-このプロジェクトは個人利用を前提としています。
+このプロジェクトは無償提供を前提としています。
+
+### コードのライセンス
+
+- **フロントエンド**: MIT License
+  - Next.js, React, Tailwind CSS, shadcn/ui など
+- **バックエンド**: MIT / Apache 2.0 License
+  - FastAPI, unsloth, transformers など
+
+### LLMモデルのライセンス
+
+- **Swallow (Llama 3.1 based)**: Llama 3.1 Community License
+  - ライセンス詳細: https://llama.meta.com/llama3/license/
+  - 非商用利用であれば制限なく使用可能
+  - 商用利用の場合は月間アクティブユーザー（MAU）が7億未満まで可能
+
+### 使用上の注意
+
+- このアプリは教育・研究目的での使用を想定しています
+- 個人情報を含む記事データの取り扱いには十分注意してください
+- 記事の著作権は元の著作者に帰属します
 
 ## サポート
 
