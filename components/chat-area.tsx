@@ -14,7 +14,7 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
   const getCharacterInfo = (role: string) => {
     switch (role) {
       case "character_a":
-        return { name: "博士", color: "bg-amber-600 text-white" }
+        return { name: "先生", color: "bg-blue-600 text-white" }
       case "character_b":
         return { name: "生徒", color: "bg-accent text-accent-foreground" }
       default:

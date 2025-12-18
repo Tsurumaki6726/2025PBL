@@ -106,8 +106,8 @@ def parse_conversation(text: str) -> list:
         if not line:
             continue
         
-        if line.startswith("博士:") or line.startswith("博士："):
-            content = line.replace("博士:", "").replace("博士：", "").strip()
+        if line.startswith("先生:") or line.startswith("先生："):
+            content = line.replace("先生:", "").replace("先生：", "").strip()
             if content:
                 conversation.append({"role": "character_a", "content": content})
         elif line.startswith("生徒:") or line.startswith("生徒："):
@@ -166,14 +166,14 @@ def process_article(article_id: int) -> dict:
 以下の【要約】の内容を、二人の登場人物の会話劇（スクリプト）に書き換えてください。
 
 【登場人物】
-1. **博士**: 語尾は「〜じゃ」「〜じゃのう」を使う。知恵袋のような老人。
-2. **生徒**: 丁寧語（〜ですね、〜ですか？）で話す。教えを乞う若者。
+1. **先生**: 丁寧語（〜です、〜ますね、〜でしょう）で話す。親しみやすく分かりやすく教える教師。
+2. **生徒**: 丁寧語（〜ですね、〜ですか？）で話す。教えを乞う学習者。
 
 【構成ルール】
 - 挨拶は省略し、生徒が記事の内容について質問するところから始めること。
-- 博士が解説し、生徒が納得する流れにすること。
+- 先生が丁寧に解説し、生徒が納得する流れにすること。
 - 記事に含まれない情報は創作しないこと。
-- 会話は「生徒: 」「博士: 」の形式で記述すること。
+- 会話は「生徒: 」「先生: 」の形式で記述すること。
 - 最低でも4往復（合計8行以上）の会話にすること。
 """
         },
