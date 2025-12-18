@@ -1,6 +1,6 @@
 # News to Chat App
 
-ニュース記事を「博士」と「生徒」の会話形式に自動変換するWebアプリケーション
+ニュース記事を「先生」と「生徒」の会話形式に自動変換するWebアプリケーション
 
 ## 概要
 
@@ -12,13 +12,13 @@
 
 ## システム構成
 
-\`\`\`
+```
 フロントエンド (Next.js)
     ↓ HTTP接続
 バックエンド (Google Colab + ngrok)
     ↓ CSV読み込み
 記事データ (honbun, midasi)
-\`\`\`
+```
 
 ## セットアップ手順
 
@@ -30,20 +30,20 @@
 
 ### 1. リポジトリのクローン
 
-\`\`\`bash
+```bash
 git clone <このリポジトリのURL>
 cd news-to-chat-app
-\`\`\`
+```
 
 ### 2. フロントエンドのセットアップ
 
-\`\`\`bash
+```bash
 # 依存関係のインストール
 npm install
 
 # 開発サーバーの起動
 npm run dev
-\`\`\`
+```
 
 ブラウザで `http://localhost:3000` にアクセス
 
@@ -73,11 +73,11 @@ npm run dev
 記事データをCSV形式で準備（必須カラム: `honbun`, `midasi`）
 
 例:
-\`\`\`csv
+```csv
 honbun,midasi
 "記事本文の内容がここに入ります...", "記事の見出し"
 "別の記事本文...", "別の見出し"
-\`\`\`
+```
 
 #### 4-4. Colabを実行
 
@@ -108,8 +108,8 @@ honbun,midasi
 
 ### 会話の構成
 
-- **博士（character_a）**: 解説役、「〜じゃ」口調
-- **生徒（character_b）**: 質問役、丁寧語
+- **先生（character_a）**: 解説役、丁寧語（〜です、〜ますね）
+- **生徒（character_b）**: 質問役、丁寧語（〜ですね、〜ですか？）
 
 ## トラブルシューティング
 
@@ -138,10 +138,10 @@ honbun,midasi
 
 バックエンド（Colabノートブック）の `MODEL_ID` を変更することで、使用するLLMを変更できます。
 
-\`\`\`python
+```python
 # 例: より高性能な13Bモデルに変更
 MODEL_ID = "tokyotech-llm/Llama-3.1-Swallow-13B-Instruct-v0.3"
-\`\`\`
+```
 
 注意: モデルサイズが大きいほどメモリを消費します。
 
@@ -156,13 +156,13 @@ MODEL_ID = "tokyotech-llm/Llama-3.1-Swallow-13B-Instruct-v0.3"
 
 ### Vercelへのデプロイ
 
-\`\`\`bash
+```bash
 # Vercel CLIをインストール
 npm i -g vercel
 
 # デプロイ
 vercel
-\`\`\`
+```
 
 または、v0.app の「Publish」ボタンからワンクリックでデプロイ可能です。
 
