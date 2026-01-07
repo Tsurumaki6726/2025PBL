@@ -56,6 +56,7 @@ npm run dev
 #### 3-2. 記事CSVを準備
 
 記事データをCSV形式で準備（必須カラム: `honbun`, `midasi`）
+ehime_kiji_001.csvをダウンロードすればOK
 
 例:
 ```csv
