@@ -2,76 +2,43 @@
 # News to Chat API - Google Colab版
 # Swallow v0.3 (Llama 3.1ベース) を使用した会話変換
 # ============================================================
-# このファイルをGoogle Colabにコピー＆ペーストして使用してください
-# セルごとに分けて実行することを推奨します
-# ============================================================
 
 # ============================================================
 # 【セル1】ライブラリのインストール（初回のみ）
 # ============================================================
-# 以下を1つのセルで実行してください
 
 """
 !pip install unsloth
 !pip install xformers
 !pip install trl peft accelerate bitsandbytes
 !pip install pandas
-!pip install fastapi uvicorn pyngrok
+!pip install fastapi uvicorn
+!npm install -g localtunnel
 """
 
 # ============================================================
 # 【セル2】ライブラリのインポート
 # ============================================================
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import time
 import torch
 import pandas as pd
 from unsloth import FastLanguageModel
+import io
 
 print("✅ ライブラリのインポート完了")
 
 # ============================================================
-# 【セル3】CSVファイルのアップロードと読み込み
+# 【セル3】記事データの初期化
 # ============================================================
 
-from google.colab import files
-
-# CSVファイルをアップロード
-print("📂 CSVファイルをアップロードしてください...")
-uploaded = files.upload()
-
-# アップロードされたファイル名を取得
-CSV_FILE_NAME = list(uploaded.keys())[0]
-print(f"✅ アップロード完了: {CSV_FILE_NAME}")
-
-# 記事データを格納するリスト
+# 記事データを格納するリスト（初期は空）
 ARTICLES = []
 
-# CSVを読み込む
-df = pd.read_csv(CSV_FILE_NAME, encoding="utf-8")
-print(f"📊 カラム一覧: {df.columns.tolist()}")
-
-if "honbun" in df.columns and "midasi" in df.columns:
-    for idx in range(len(df)):
-        ARTICLES.append({
-            "honbun": str(df["honbun"][idx]),
-            "midasi": str(df["midasi"][idx])
-        })
-    print(f"✅ {len(ARTICLES)} 件の記事をロードしました")
-    print(f"📝 最初の記事の見出し: {ARTICLES[0]['midasi']}")
-elif "honbun" in df.columns:
-    for idx in range(len(df)):
-        content = str(df["honbun"][idx])
-        ARTICLES.append({
-            "honbun": content,
-            "midasi": content[:30] + "..."
-        })
-    print(f"✅ {len(ARTICLES)} 件の記事をロード（honbunのみ）")
-else:
-    print(f"❌ 'honbun'カラムが見つかりません。カラム: {df.columns.tolist()}")
+print("✅ 記事データの初期化完了（CSVはフロントエンドからアップロードします）")
 
 # ============================================================
 # 【セル4】Swallowモデルのロード（3〜5分かかります）
@@ -251,7 +218,53 @@ class ArticleItem(BaseModel):
 class ArticlesResponse(BaseModel):
     articles: list[ArticleItem]
 
-# エンドポイント
+class UploadResponse(BaseModel):
+    message: str
+    articles_count: int
+
+@app.post("/upload", response_model=UploadResponse)
+async def upload_csv(file: UploadFile = File(...)):
+    """CSVファイルをアップロードして記事を読み込む"""
+    global ARTICLES
+    
+    try:
+        # ファイル内容を読み込む
+        contents = await file.read()
+        
+        # CSVとして解析
+        df = pd.read_csv(io.BytesIO(contents), encoding="utf-8")
+        
+        # 記事リストをクリア
+        ARTICLES = []
+        
+        # honbunとmidasiカラムの確認
+        if "honbun" in df.columns and "midasi" in df.columns:
+            for idx in range(len(df)):
+                ARTICLES.append({
+                    "honbun": str(df["honbun"][idx]),
+                    "midasi": str(df["midasi"][idx])
+                })
+        elif "honbun" in df.columns:
+            for idx in range(len(df)):
+                content = str(df["honbun"][idx])
+                ARTICLES.append({
+                    "honbun": content,
+                    "midasi": content[:30] + "..."
+                })
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"'honbun'カラムが見つかりません。カラム: {df.columns.tolist()}"
+            )
+        
+        return UploadResponse(
+            message=f"{len(ARTICLES)}件の記事を読み込みました",
+            articles_count=len(ARTICLES)
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CSVの読み込みに失敗: {str(e)}")
+
 @app.get("/articles", response_model=ArticlesResponse)
 async def get_articles():
     """記事一覧を返す（previewにはmidasiを使用）"""
@@ -290,30 +303,32 @@ async def health_check():
 print("✅ FastAPIアプリの定義完了")
 
 # ============================================================
-# 【セル7】ngrokでサーバーを公開（このセルを実行）
+# 【セル7】localtunnelでサーバーを公開（このセルを実行）
 # ============================================================
-# 以下を別のセルで実行してください
 
 """
-from pyngrok import ngrok
+import subprocess
+import threading
 import nest_asyncio
 import uvicorn
-
-# ngrokの認証トークンを設定（https://dashboard.ngrok.com/get-started/your-authtoken で取得）
-# ngrok.set_auth_token("YOUR_NGROK_AUTH_TOKEN")
 
 # nest_asyncioを適用（Colab環境で必要）
 nest_asyncio.apply()
 
-# ngrokトンネルを開始
-public_url = ngrok.connect(8000)
-print(f"🌐 公開URL: {public_url}")
-print(f"📋 このURLをフロントエンドの設定に使用してください")
-print(f"")
-print(f"API エンドポイント:")
-print(f"  - GET  {public_url}/articles  - 記事一覧")
-print(f"  - POST {public_url}/convert   - 会話変換")
-print(f"  - GET  {public_url}/health    - ヘルスチェック")
+# localtunnelを別スレッドで起動
+def start_localtunnel():
+    subprocess.run(["lt", "--port", "8000"])
+
+tunnel_thread = threading.Thread(target=start_localtunnel, daemon=True)
+tunnel_thread.start()
+
+print("🌐 localtunnelを起動中...")
+print("⏳ 数秒後にURLが表示されます")
+print("")
+print("表示されたURLをフロントエンドの設定に使用してください")
+print("")
+print("注意: localtunnelは登録不要ですが、セッションごとにURLが変わります")
+print("")
 
 # サーバー起動
 uvicorn.run(app, host="0.0.0.0", port=8000)
@@ -330,10 +345,10 @@ print("""
 1. 【セル1】のpipコマンドを実行（初回のみ）
 2. 【セル2】〜【セル6】を順番に実行
 3. 【セル7】のコメントを外して実行
-4. 表示されるngrok URLをフロントエンドに設定
+4. 表示されるlocaltunnel URLをフロントエンドに設定
+5. フロントエンドからCSVファイルをアップロード
 
-※ ngrokの認証トークンが必要です：
-   https://dashboard.ngrok.com/get-started/your-authtoken
+※ localtunnelは登録不要で使えます！
 
 ============================================================
 """)
