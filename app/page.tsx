@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Sidebar from "@/components/sidebar"
 import ChatArea from "@/components/chat-area"
 import ArticleSelector from "@/components/article-selector"
 import ConvertButton from "@/components/convert-button"
+import CsvUploader from "@/components/csv-uploader"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
@@ -29,50 +30,91 @@ export default function Home() {
   const [apiUrlInput, setApiUrlInput] = useState<string>("")
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string>("")
+  const [isAutoReconnecting, setIsAutoReconnecting] = useState(false)
+
+  useEffect(() => {
+    const savedUrl = localStorage.getItem("lastApiUrl")
+    if (savedUrl) {
+      setApiUrlInput(savedUrl)
+      setIsAutoReconnecting(true)
+      attemptConnection(savedUrl)
+    }
+  }, [])
+
+  const attemptConnection = async (url: string) => {
+    const cleanUrl = url.trim().replace(/\/$/, "")
+    setIsLoadingArticles(true)
+    setConnectionError("")
+
+    try {
+      const response = await fetch(`${cleanUrl}/health`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setApiUrl(cleanUrl)
+        setIsConnected(true)
+        localStorage.setItem("lastApiUrl", cleanUrl)
+
+        if (data.articles_count > 0) {
+          await fetchArticles(cleanUrl)
+        }
+      } else {
+        if (isAutoReconnecting) {
+          setConnectionError("前回のURLに接続できませんでした。新しいURLを入力してください。")
+        } else {
+          setConnectionError(`接続に失敗しました（${response.status}）。URLを確認してください。`)
+        }
+      }
+    } catch (error) {
+      console.error("接続エラー:", error)
+      if (isAutoReconnecting) {
+        setConnectionError("自動接続に失敗しました。Colabを起動し、新しいURLを入力してください。")
+      } else {
+        setConnectionError("接続に失敗しました。Colabが起動しているか確認してください。")
+      }
+    } finally {
+      setIsLoadingArticles(false)
+      setIsAutoReconnecting(false)
+    }
+  }
 
   const handleConnect = async () => {
     if (!apiUrlInput.trim()) {
       setConnectionError("URLを入力してください")
       return
     }
+    await attemptConnection(apiUrlInput)
+  }
 
-    const url = apiUrlInput.trim().replace(/\/$/, "") // Remove trailing slash
-    setIsLoadingArticles(true)
-    setConnectionError("")
-
+  const fetchArticles = async (url: string) => {
     try {
       const response = await fetch(`${url}/articles`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true", // ngrokの警告画面をバイパスするヘッダーを追加
         },
       })
-
-      const contentType = response.headers.get("content-type")
-      if (contentType && contentType.includes("text/html")) {
-        setConnectionError(
-          "ngrokの警告画面が表示されています。ブラウザで一度ngrok URLにアクセスして警告を承認してください。",
-        )
-        return
-      }
 
       if (response.ok) {
         const data = await response.json()
         setArticles(data.articles)
-        setApiUrl(url)
-        setIsConnected(true)
         if (data.articles.length > 0) {
           setSelectedArticleId(data.articles[0].id)
         }
-      } else {
-        setConnectionError(`接続に失敗しました（${response.status}）。URLを確認してください。`)
       }
     } catch (error) {
-      console.error("接続エラー:", error)
-      setConnectionError("接続に失敗しました。Colabが起動しているか確認してください。")
-    } finally {
-      setIsLoadingArticles(false)
+      console.error("記事取得エラー:", error)
+    }
+  }
+
+  const handleUploadSuccess = async () => {
+    if (apiUrl) {
+      await fetchArticles(apiUrl)
     }
   }
 
@@ -90,7 +132,6 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true", // ngrokの警告画面をバイパスするヘッダーを追加
         },
         body: JSON.stringify({
           article_id: selectedArticleId,
@@ -99,7 +140,9 @@ export default function Home() {
 
       const contentType = response.headers.get("content-type")
       if (contentType && contentType.includes("text/html")) {
-        throw new Error("ngrokの警告画面が返されました。ブラウザで一度ngrok URLにアクセスして警告を承認してください。")
+        throw new Error(
+          "localtunnelの警告画面が返されました。ブラウザで一度localtunnel URLにアクセスして警告を承認してください。",
+        )
       }
 
       if (!response.ok) {
@@ -158,6 +201,7 @@ export default function Home() {
     setChatHistory([])
     setSummary("")
     setProcessingTime("")
+    localStorage.removeItem("lastApiUrl")
   }
 
   return (
@@ -176,7 +220,6 @@ export default function Home() {
         </header>
 
         <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
-          {/* Input Area */}
           <div className="lg:w-1/2 flex flex-col p-6 border-r border-border overflow-y-auto">
             {!isConnected ? (
               <div className="space-y-4">
@@ -184,18 +227,23 @@ export default function Home() {
                   <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
                     Connect to Google Colab
                   </h2>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Google Colabでバックエンドを起動し、ngrokのURLを入力してください。
-                  </p>
+                  {isAutoReconnecting ? (
+                    <p className="text-sm text-muted-foreground mb-4">前回のURLに自動接続しています...</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Google Colabでバックエンドを起動し、localtunnelのURLを入力してください。
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
                   <Input
                     type="url"
-                    placeholder="https://xxxx-xx-xx.ngrok-free.app"
+                    placeholder="https://your-tunnel.loca.lt"
                     value={apiUrlInput}
                     onChange={(e) => setApiUrlInput(e.target.value)}
                     className="flex-1"
+                    disabled={isAutoReconnecting}
                   />
                   <Button onClick={handleConnect} disabled={isLoadingArticles}>
                     {isLoadingArticles ? "接続中..." : "接続"}
@@ -212,15 +260,14 @@ export default function Home() {
                     <li>
                       Google Colabで <code className="bg-secondary px-1 rounded">news_to_chat_colab.py</code> を開く
                     </li>
-                    <li>CSVファイルをアップロード（honbun, midasiカラム必須）</li>
                     <li>全てのセルを順番に実行</li>
-                    <li>表示されるngrok URLをここに入力</li>
+                    <li>表示されるlocaltunnel URLをここに入力</li>
+                    <li>接続後、CSVファイルをアップロード</li>
                   </ol>
                 </div>
               </div>
             ) : (
               <>
-                {/* Connected state */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -231,44 +278,55 @@ export default function Home() {
                   </Button>
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                    Select Article
-                  </h2>
-                  <span className="text-xs text-muted-foreground">{articles.length} articles</span>
+                <div className="mb-6 p-4 bg-card border border-border rounded-lg">
+                  <CsvUploader apiUrl={apiUrl} onUploadSuccess={handleUploadSuccess} />
                 </div>
 
-                <ArticleSelector
-                  articles={articles}
-                  selectedId={selectedArticleId}
-                  onSelect={setSelectedArticleId}
-                  disabled={isLoading}
-                  isLoading={isLoadingArticles}
-                />
+                {articles.length > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                        Select Article
+                      </h2>
+                      <span className="text-xs text-muted-foreground">{articles.length} articles</span>
+                    </div>
 
-                <div className="mt-4">
-                  <ConvertButton
-                    onClick={handleConvert}
-                    isLoading={isLoading}
-                    disabled={selectedArticleId === null || isLoading}
-                  />
-                </div>
+                    <ArticleSelector
+                      articles={articles}
+                      selectedId={selectedArticleId}
+                      onSelect={setSelectedArticleId}
+                      disabled={isLoading}
+                      isLoading={isLoadingArticles}
+                    />
 
-                {selectedArticle && (
-                  <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
-                    <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
-                      Selected Article Preview
-                    </h3>
-                    <p className="text-sm text-foreground leading-relaxed max-h-40 overflow-y-auto">
-                      {selectedArticle.content}
-                    </p>
+                    <div className="mt-4">
+                      <ConvertButton
+                        onClick={handleConvert}
+                        isLoading={isLoading}
+                        disabled={selectedArticleId === null || isLoading}
+                      />
+                    </div>
+
+                    {selectedArticle && (
+                      <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
+                        <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
+                          Selected Article Preview
+                        </h3>
+                        <p className="text-sm text-foreground leading-relaxed max-h-40 overflow-y-auto">
+                          {selectedArticle.content}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">記事がありません。CSVファイルをアップロードしてください。</p>
                   </div>
                 )}
               </>
             )}
           </div>
 
-          {/* Output Area */}
           <div className="lg:w-1/2 flex flex-col p-6 bg-secondary/30 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Output</h2>
