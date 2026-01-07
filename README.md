@@ -69,11 +69,13 @@ honbun,midasi
 1. 「ランタイム」→「すべてのセルを実行」
 2. 最後のセルで **localtunnel URL** が表示される（例: `https://xxxx.loca.lt`）
 3. このURLをコピー
+4. URLをwebの検索欄に貼り付け
+5. パスワードを入力してclick to submitを押下
 
 ### 4. アプリの使用
 
 1. フロントエンド（`http://localhost:3000`）を開く
-2. 左側のサイドバーに **localtunnel URL** を貼り付け
+2. 入力欄に **localtunnel URL** を貼り付け
 3. 「接続」をクリック
 4. **CSVファイルをアップロード**（フロントエンドから直接アップロード可能）
 5. 記事を選択して「会話形式に変換」をクリック
