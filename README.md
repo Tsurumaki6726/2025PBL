@@ -32,7 +32,7 @@
 
 ```bash
 git clone <このリポジトリのURL>
-cd news-to-chat-app
+cd 2025PBL
 ```
 
 ### 2. フロントエンドのセットアップ
