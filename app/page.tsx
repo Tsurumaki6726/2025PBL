@@ -31,6 +31,10 @@ export default function Home() {
   const [connectionError, setConnectionError] = useState<string>("")
   const [isAutoReconnecting, setIsAutoReconnecting] = useState(false)
 
+  const [inputMode, setInputMode] = useState<"csv" | "direct">("csv")
+  const [directInputTitle, setDirectInputTitle] = useState("")
+  const [directInputContent, setDirectInputContent] = useState("")
+
   useEffect(() => {
     const savedUrl = localStorage.getItem("lastApiUrl")
     if (savedUrl) {
@@ -120,7 +124,25 @@ export default function Home() {
   const selectedArticle = articles.find((a) => a.id === selectedArticleId)
 
   const handleConvert = async () => {
-    if (selectedArticleId === null || !apiUrl) return
+    if (!apiUrl) return
+
+    if (inputMode === "direct") {
+      if (!directInputContent.trim()) {
+        setChatHistory([
+          {
+            role: "assistant",
+            content: "本文を入力してください。",
+          },
+        ])
+        return
+      }
+
+      await handleDirectConvert(directInputContent)
+      return
+    }
+
+    // CSV mode
+    if (selectedArticleId === null) return
 
     setIsLoading(true)
     setSummary("")
@@ -183,10 +205,74 @@ export default function Home() {
     }
   }
 
+  const handleDirectConvert = async (content: string) => {
+    setIsLoading(true)
+    setSummary("")
+    setProcessingTime("")
+
+    try {
+      const response = await fetch(`${apiUrl}/convert`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          honbun: content,
+        }),
+      })
+
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error(
+          "localtunnelの警告画面が返されました。ブラウザで一度localtunnel URLにアクセスして警告を承認してください。",
+        )
+      }
+
+      if (!response.ok) {
+        throw new Error(`変換に失敗しました（${response.status}）`)
+      }
+
+      const data = await response.json()
+
+      if (data.summary) {
+        setSummary(data.summary)
+      }
+      if (data.processing_time) {
+        setProcessingTime(data.processing_time)
+      }
+
+      const newHistory: Array<{ role: "character_a" | "character_b"; content: string }> = []
+
+      if (data.conversation && Array.isArray(data.conversation)) {
+        data.conversation.forEach((msg: { role: string; content: string }) => {
+          newHistory.push({
+            role: msg.role as "character_a" | "character_b",
+            content: msg.content,
+          })
+        })
+      }
+
+      setChatHistory(newHistory)
+    } catch (error) {
+      console.error("エラー:", error)
+      setChatHistory([
+        {
+          role: "assistant",
+          content:
+            error instanceof Error ? error.message : "エラーが発生しました。Colabが起動しているか確認してください。",
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleReset = () => {
     setChatHistory([])
     setSummary("")
     setProcessingTime("")
+    setDirectInputTitle("")
+    setDirectInputContent("")
     if (articles.length > 0) {
       setSelectedArticleId(articles[0].id)
     }
@@ -293,13 +379,15 @@ export default function Home() {
                 <CsvUploader apiUrl={apiUrl} onUploadSuccess={handleUploadSuccess} />
               </div>
 
-              {articles.length > 0 ? (
+              {articles.length > 0 || true ? (
                 <>
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                       Select Article
                     </h2>
-                    <span className="text-xs text-muted-foreground">{articles.length} articles</span>
+                    {articles.length > 0 && (
+                      <span className="text-xs text-muted-foreground">{articles.length} articles</span>
+                    )}
                   </div>
 
                   <ArticleSelector
@@ -308,17 +396,28 @@ export default function Home() {
                     onSelect={setSelectedArticleId}
                     disabled={isLoading}
                     isLoading={isLoadingArticles}
+                    onDirectInput={(title, content) => {
+                      setDirectInputTitle(title)
+                      setDirectInputContent(content)
+                      setInputMode("direct")
+                    }}
+                    directInputTitle={directInputTitle}
+                    directInputContent={directInputContent}
                   />
 
                   <div className="mt-4">
                     <ConvertButton
                       onClick={handleConvert}
                       isLoading={isLoading}
-                      disabled={selectedArticleId === null || isLoading}
+                      disabled={
+                        (inputMode === "csv" && selectedArticleId === null) ||
+                        (inputMode === "direct" && !directInputContent.trim()) ||
+                        isLoading
+                      }
                     />
                   </div>
 
-                  {selectedArticle && (
+                  {inputMode === "csv" && selectedArticle && (
                     <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
                       <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
                         Selected Article Preview
@@ -326,6 +425,15 @@ export default function Home() {
                       <p className="text-sm text-foreground leading-relaxed max-h-40 overflow-y-auto">
                         {selectedArticle.content}
                       </p>
+                    </div>
+                  )}
+
+                  {inputMode === "direct" && directInputTitle && (
+                    <div className="mt-4 p-4 bg-secondary/50 rounded-lg border border-border">
+                      <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
+                        {directInputTitle}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{directInputContent.length} 文字</p>
                     </div>
                   )}
                 </>
