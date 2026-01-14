@@ -177,6 +177,94 @@ def process_article(article_id: int) -> dict:
         "processing_time": f"{elapsed_time:.2f} 秒"
     }
 
+def process_article_text(honbun: str) -> dict:
+    """直接入力されたテキストを要約し、会話形式に変換する"""
+    
+    start_time = time.time()
+    
+    # --- ステップA: 要約 ---
+    summary_prompt = [
+        {
+            "role": "system",
+            "content": "あなたは優秀な編集者です。以下のニュース記事の要点を、事実に基づいて200文字程度の日本語で要約してください。"
+        },
+        {
+            "role": "user",
+            "content": f"## 記事本文\n{honbun}"
+        }
+    ]
+    
+    inputs1 = tokenizer.apply_chat_template(
+        summary_prompt,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_tensors="pt"
+    ).to(model.device)
+    
+    outputs1 = model.generate(
+        inputs1,
+        max_new_tokens=300,
+        temperature=0.3,
+        use_cache=True
+    )
+    summary_text = tokenizer.decode(
+        outputs1[0][inputs1.shape[-1]:],
+        skip_special_tokens=True
+    )
+    
+    # --- ステップB: 会話変換 ---
+    roleplay_prompt = [
+        {
+            "role": "system",
+            "content": """
+あなたはプロの脚本家です。
+以下の【要約】の内容を、二人の登場人物の会話劇（スクリプト）に書き換えてください。
+
+【登場人物】
+1. **先生**: 丁寧語（〜です、〜ますね、〜でしょう）で話す。親しみやすく分かりやすく教える教師。
+2. **生徒**: 丁寧語（〜ですね、〜ですか？）で話す。教えを乞う学習者。
+
+【構成ルール】
+- 挨拶は省略し、生徒が記事の内容について質問するところから始めること。
+- 先生が丁寧に解説し、生徒が納得する流れにすること。
+- 記事に含まれない情報は創作しないこと。
+- 会話は「生徒: 」「先生: 」の形式で記述すること。
+- 最低でも4往復（合計8行以上）の会話にすること。
+"""
+        },
+        {
+            "role": "user",
+            "content": f"【要約】\n{summary_text}\n\nこの内容で会話劇を作成してください。"
+        }
+    ]
+    
+    inputs2 = tokenizer.apply_chat_template(
+        roleplay_prompt,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_tensors="pt"
+    ).to(model.device)
+    
+    outputs2 = model.generate(
+        inputs2,
+        max_new_tokens=1024,
+        temperature=0.7,
+        use_cache=True
+    )
+    conversation_text = tokenizer.decode(
+        outputs2[0][inputs2.shape[-1]:],
+        skip_special_tokens=True
+    )
+    
+    elapsed_time = time.time() - start_time
+    conversation = parse_conversation(conversation_text)
+    
+    return {
+        "summary": summary_text,
+        "conversation": conversation,
+        "processing_time": f"{elapsed_time:.2f} 秒"
+    }
+
 print("✅ 生成関数の定義完了")
 
 # ============================================================
@@ -199,7 +287,8 @@ app.add_middleware(
 
 # リクエスト/レスポンスモデル
 class ConvertRequest(BaseModel):
-    article_id: int
+    article_id: int | None = None
+    honbun: str | None = None
 
 class ConversationMessage(BaseModel):
     role: str
@@ -281,7 +370,16 @@ async def get_articles():
 async def convert_endpoint(request: ConvertRequest):
     """記事を会話形式に変換する"""
     try:
-        result = process_article(request.article_id)
+        if request.honbun:
+            result = process_article_text(request.honbun)
+        elif request.article_id is not None:
+            result = process_article(request.article_id)
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="article_id または honbun のいずれかを指定してください"
+            )
+        
         return ConvertResponse(
             summary=result["summary"],
             conversation=[
