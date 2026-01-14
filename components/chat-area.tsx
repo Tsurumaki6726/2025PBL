@@ -1,5 +1,8 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
+
 interface ChatMessage {
   role: "user" | "assistant" | "character_a" | "character_b"
   content: string
@@ -11,6 +14,8 @@ interface ChatAreaProps {
 }
 
 export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
+  const [copySuccess, setCopySuccess] = useState(false)
+
   const getCharacterInfo = (role: string) => {
     switch (role) {
       case "character_a":
@@ -19,6 +24,23 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
         return { name: "生徒", color: "bg-accent text-accent-foreground" }
       default:
         return { name: "?", color: "bg-muted text-muted-foreground" }
+    }
+  }
+
+  const handleCopyConversation = async () => {
+    const conversationText = chatHistory
+      .map((msg) => {
+        const charInfo = getCharacterInfo(msg.role)
+        return `${charInfo.name}: ${msg.content}`
+      })
+      .join("\n\n")
+
+    try {
+      await navigator.clipboard.writeText(conversationText)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch (error) {
+      console.error("コピーに失敗しました:", error)
     }
   }
 
@@ -42,63 +64,91 @@ export default function ChatArea({ chatHistory, isLoading }: ChatAreaProps) {
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
-          {chatHistory.map((msg, idx) => {
-            const charInfo = getCharacterInfo(msg.role)
-            const isCharacterA = msg.role === "character_a"
+        <>
+          <div className="flex-shrink-0 border-b border-border px-4 py-3 flex items-center justify-between bg-card/50">
+            <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">会話形式</h3>
+            <Button variant="ghost" size="sm" onClick={handleCopyConversation} className="h-8">
+              {copySuccess ? (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  コピー完了
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                  コピー
+                </>
+              )}
+            </Button>
+          </div>
 
-            return (
-              <div key={idx} className={`flex gap-3 ${isCharacterA ? "" : "flex-row-reverse"}`}>
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${charInfo.color}`}
-                >
-                  {charInfo.name.charAt(0)}
-                </div>
-                <div className="flex flex-col gap-1 max-w-[80%]">
-                  <span className={`text-xs text-muted-foreground ${isCharacterA ? "" : "text-right"}`}>
-                    {charInfo.name}
-                  </span>
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
+            {chatHistory.map((msg, idx) => {
+              const charInfo = getCharacterInfo(msg.role)
+              const isCharacterA = msg.role === "character_a"
+
+              return (
+                <div key={idx} className={`flex gap-3 ${isCharacterA ? "" : "flex-row-reverse"}`}>
                   <div
-                    className={`rounded-xl px-4 py-2.5 ${
-                      isCharacterA
-                        ? "bg-secondary text-secondary-foreground rounded-tl-sm"
-                        : "bg-accent/10 text-foreground rounded-tr-sm"
-                    }`}
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${charInfo.color}`}
                   >
-                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                    {charInfo.name.charAt(0)}
+                  </div>
+                  <div className="flex flex-col gap-1 max-w-[80%]">
+                    <span className={`text-xs text-muted-foreground ${isCharacterA ? "" : "text-right"}`}>
+                      {charInfo.name}
+                    </span>
+                    <div
+                      className={`rounded-xl px-4 py-2.5 ${
+                        isCharacterA
+                          ? "bg-secondary text-secondary-foreground rounded-tl-sm"
+                          : "bg-accent/10 text-foreground rounded-tr-sm"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <div className="flex gap-0.5">
+                    <div
+                      className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <div
+                      className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <div
+                      className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-muted-foreground">処理中...</span>
+                  <div className="bg-secondary rounded-xl px-4 py-2.5 rounded-tl-sm">
+                    <p className="text-sm text-muted-foreground">会話を生成しています（10〜30秒程度かかります）</p>
                   </div>
                 </div>
               </div>
-            )
-          })}
-
-          {isLoading && (
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <div className="flex gap-0.5">
-                  <div
-                    className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  />
-                  <div
-                    className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  />
-                  <div
-                    className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-muted-foreground">処理中...</span>
-                <div className="bg-secondary rounded-xl px-4 py-2.5 rounded-tl-sm">
-                  <p className="text-sm text-muted-foreground">会話を生成しています（10〜30秒程度かかります）</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   )
