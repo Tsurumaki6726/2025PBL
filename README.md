@@ -76,7 +76,7 @@ honbun,midasi
 2. 最後のセルで **localtunnel URL** が表示される（例: `https://xxxx.loca.lt`）
 3. このURLをコピー
 4. URLをwebの検索欄に貼り付け
-5. パスワードを入力してclick to submitを押下
+5. 最後のセルにあるパスワードを入力してclick to submitを押下
 
 ## 使い方
 
