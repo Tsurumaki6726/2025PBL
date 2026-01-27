@@ -121,11 +121,23 @@ npm run dev
 
 ### ステップ4: Google Colab の準備
 
-#### 4-1. Colabノートブックを開く
+#### 4-1. ノートブックファイルをダウンロード
 
-配布された `news_to_chat_colab.py` をGoogle Colabで開く
+1. このリポジトリの `backend/` フォルダにある **`newspaper_backend.ipynb`** をダウンロードします
+2. GitHubの場合：ファイルを開いて右上の「Download」ボタンをクリック
+3. ローカルの場合：`backend/newspaper_backend.ipynb` をコピーして任意の場所に保存
 
-#### 4-2. 記事CSVを準備
+#### 4-2. Google Colabにアップロード
+
+1. [Google Colab](https://colab.research.google.com/) にアクセス
+2. Googleアカウントでログイン
+3. 「ファイル」→「ノートブックをアップロード」をクリック
+4. ダウンロードした **`newspaper_backend.ipynb`** を選択してアップロード
+5. ノートブックが開いたことを確認
+
+> 💡 **ヒント**: 次回以降は「最近使用したノートブック」から直接開けます
+
+#### 4-3. 記事CSVを準備
 
 記事データをCSV形式で準備（必須カラム: `honbun`, `midasi`）
 ehime_kiji_001.csvをダウンロードすればOK
@@ -137,7 +149,7 @@ honbun,midasi
 "別の記事本文...", "別の見出し"
 ```
 
-#### 4-3. Colabを実行
+#### 4-4. Colabを実行
 
 1. 「ランタイム」→「すべてのセルを実行」
 2. 最後のセルで **localtunnel URL** が表示される（例: `https://xxxx.loca.lt`）
