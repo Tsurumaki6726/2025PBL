@@ -98,6 +98,18 @@
 
 このアプリを動かすには **Node.js** が必要です。
 
+**Mac (Homebrew) の場合**:
+```bash
+brew install node
+```
+
+**Windows (winget) の場合**:
+コマンドプロンプトまたはPowerShellで実行してください。
+```bash
+winget install OpenJS.NodeJS.LTS
+```
+
+**インストーラーを使う場合**:
 1. ターミナルで `node -v` を実行して確認
    - バージョンが表示されればOK（例: `v18.17.0`）
    - 「command not found」などのエラーが出る場合はインストールが必要です
